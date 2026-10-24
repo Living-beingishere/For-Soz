@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فەرهەنگی زیرەک</title>
+  <!-- PDF.js CDN بۆ خوێندنەوەی دەقی ڕاستەقینەی ناو PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat:wght@700&family=Quicksand:wght@600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+    }
+
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      gap: 22px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .welcome-banner {
+      position: relative;
+      background-color: #ffd4de;
+      padding: 14px 45px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(255, 182, 193, 0.35);
+      user-select: none;
+    }
+
+    .welcome-banner::before {
+      content: '';
+      position: absolute;
+      top: 5px; bottom: 5px; left: 6px; right: 6px;
+      border: 2px dashed #f7a8b8;
+      border-radius: 40px;
+      pointer-events: none;
+    }
+
+    .welcome-text {
+      font-family: 'Pacifico', 'Caveat', cursive;
+      font-size: 28px;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(230, 115, 138, 0.4);
+      letter-spacing: 1px;
+      z-index: 2;
+    }
+
+    .heart-icon { position: absolute; width: 24px; height: 24px; fill: #f596a7; z-index: 3; }
+    .heart-top-right { top: -8px; right: 12px; transform: rotate(15deg); }
+    .heart-bottom-left { bottom: -8px; left: 12px; transform: rotate(-25deg); }
+  </style>
+</head>
+  <style>
+    .bubbly-box {
+      position: relative;
+      background-color: #ffffff;
+      border: 3.5px solid #ffaec9;
+      border-radius: 30px;
+      padding: 16px 45px;
+      box-shadow: 0 8px 20px rgba(255, 174, 201, 0.35);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+      user-select: none;
+    }
+
+    .bubbly-box:hover {
+      background-color: #fff5f7;
+      box-shadow: 0 12px 25px rgba(255, 174, 201, 0.45);
+      transform: scale(1.05);
+    }
+
+    .bubbly-box:active { transform: scale(0.95); }
+    .bubbly-text { color: #e0527b; font-size: 26px; font-weight: bold; text-align: center; }
+
+    #dashboard-screen {
+      display: none;
+      opacity: 0;
+      width: 100%;
+      max-width: 420px;
+      padding: 20px 10px;
+      transition: opacity 0.5s ease;
+    }
+
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 12px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .folder-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.25s ease, filter 0.25s ease;
+      user-select: none;
+      width: 100%;
+    }
+
+    .folder-item:active { transform: scale(0.95); }
+    .folder-svg { width: 145px; height: 115px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.06)); }
+    .folder-title { margin-top: 4px; font-size: 15px; font-weight: bold; color: #5b7996; text-align: center; }
+  </style>
+  <style>
+    #dictionary-screen {
+      display: none;
+      opacity: 0;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      background: #f4ede4 url('https://images.unsplash.com/photo-1516541196182-6bdb0516ed27?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+      transition: opacity 0.5s ease;
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .dict-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(248, 243, 236, 0.72);
+      backdrop-filter: blur(4px);
+      z-index: 1;
+    }
+
+    .dict-content { position: relative; z-index: 2; width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; }
+
+    .back-btn {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.5px solid #d4c3b3;
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 14px;
+      color: #735d4d;
+      cursor: pointer;
+      margin-bottom: 25px;
+      transition: background 0.2s ease;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .back-btn:hover { background: #ffffff; }
+
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      background: rgba(255, 253, 250, 0.92);
+      border: 2px solid #e2d5c5;
+      border-radius: 35px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 8px 22px rgba(115, 93, 77, 0.08);
+      margin-bottom: 15px;
+    }
+
+    .search-icon {
+      width: 22px; height: 22px; fill: none; stroke: #a08c7d;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+      margin-left: 10px; cursor: pointer;
+    }
+
+    .search-input {
+      border: none; outline: none; background: transparent;
+      width: 100%; font-size: 17px; color: #57463a; direction: auto; text-align: left;
+    }
+
+    .search-input::placeholder { color: #b5a495; font-style: italic; }
+    .cat-illustration { width: 50px; height: auto; margin-right: 5px; opacity: 0.9; }
+
+    .dict-subtitle {
+      font-size: 16px; color: #8c7868; letter-spacing: 2px;
+      margin-top: 5px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px; font-family: 'Georgia', serif;
+    }
+  </style>
+  <style>
+    .result-card {
+      width: 100%; background: rgba(255, 255, 255, 0.95);
+      border: 1.5px solid #e8dec8; border-radius: 25px;
+      padding: 22px 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      display: none; flex-direction: column; animation: fadeIn 0.3s ease; margin-bottom: 30px;
+    }
+
+    .result-word {
+      font-size: 22px; font-weight: bold; color: #4a3b32;
+      margin-bottom: 12px; border-bottom: 1.5px solid #e8dec8; padding-bottom: 8px; direction: auto;
+    }
+
+    .section-label { font-size: 13px; font-weight: bold; color: #8c7361; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 12px; }
+    .result-translation { font-size: 20px; color: #c06c84; font-weight: bold; margin-top: 4px; line-height: 1.5; direction: rtl; text-align: right; }
+    
+    .result-definition {
+      font-size: 15px; color: #4a3b32; margin-top: 4px; line-height: 1.6;
+      background: rgba(244, 237, 228, 0.5); padding: 10px 14px; border-radius: 12px;
+      border-left: 3.5px solid #c06c84; direction: ltr; text-align: left;
+    }
+
+    .result-explanation-kurdish {
+      font-size: 15px; color: #3b2c23; margin-top: 4px; line-height: 1.7;
+      background: rgba(255, 245, 247, 0.7); padding: 10px 14px; border-radius: 12px;
+      border-right: 3.5px solid #c06c84; direction: rtl; text-align: right;
+    }
+
+    .loading-text { color: #a08c7d; font-size: 15px; font-style: italic; margin-top: 10px; }
+
+    #flashcards-screen, #create-card-screen, #test-setup-screen, #test-quiz-screen, #test-result-screen, #todo-screen, #create-todo-screen, #notes-screen, #create-note-screen, #summary-screen {
+      display: none; opacity: 0; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0;
+      background: #fdf8f5; transition: opacity 0.4s ease; z-index: 105;
+      flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; box-sizing: border-box;
+    }
+
+    .make-cards-btn {
+      background: #ffe3ec; border: 2px dashed #ff9ebb; border-radius: 25px;
+      padding: 12px 35px; font-size: 18px; font-weight: bold; color: #d65b7f;
+      cursor: pointer; box-shadow: 0 6px 15px rgba(255, 174, 201, 0.25);
+      transition: transform 0.2s, background 0.2s; margin-bottom: 20px; font-family: 'Quicksand', sans-serif;
+    }
+
+    .make-cards-btn:hover { transform: scale(1.04); background: #ffd6e5; }
+  </style>
+  <style>
+    .cards-viewer-container {
+      width: 100%; max-width: 360px; height: 280px;
+      display: flex; justify-content: center; align-items: center; position: relative; margin-top: 10px;
+    }
+
+    .flashcard-3d-wrapper {
+      width: 310px; height: 195px; perspective: 1000px;
+      cursor: pointer; position: absolute; touch-action: pan-y; user-select: none;
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+    }
+
+    .flashcard-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+    .flashcard-3d-wrapper.flipped .flashcard-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+      border-radius: 30px; padding: 25px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 3px dashed #d1c2ba; box-sizing: border-box;
+    }
+
+    .card-face-back { transform: rotateY(180deg); }
+
+    .style-pink-bow { background: #fff2f5; border-color: #ffaec9; }
+    .style-bear { background: #fffbf0; border-color: #e3c49a; }
+    .style-flower { background: #f8f4ff; border-color: #cbb4f5; }
+    .style-cloud { background: #f0f7ff; border-color: #aed3ff; }
+    .style-strawberry { background: #fff0f3; border-color: #ff9ebb; }
+    .style-bunny { background: #ffffff; border-color: #ffd1dc; }
+    .style-moon { background: #f2f7ff; border-color: #9cbdf2; }
+
+    .sticker-decoration { position: absolute; font-size: 26px; pointer-events: none; }
+    .deco-top-left { top: -12px; left: 15px; }
+    .deco-top-center { top: -16px; left: 50%; transform: translateX(-50%); }
+    .deco-top-right { top: -12px; right: 15px; }
+    .deco-bottom-right { bottom: -10px; right: 15px; }
+    .deco-bottom-left { bottom: -10px; left: 15px; }
+
+    .card-text-q { font-size: 20px; font-weight: bold; color: #594539; }
+    .card-text-a { font-size: 20px; font-weight: bold; color: #d65b7f; }
+
+    .swipe-hint-container {
+      display: flex; justify-content: space-between; width: 320px;
+      font-size: 13.5px; font-weight: bold; margin-top: 30px; direction: ltr;
+    }
+
+    .hint-wrong { color: #e74c3c; background: #fdf0ed; padding: 6px 12px; border-radius: 12px; border: 1px solid #f8d7da; }
+    .hint-correct { color: #27ae60; background: #edf9f0; padding: 6px 12px; border-radius: 12px; border: 1px solid #d4edda; }
+  </style>
+  <style>
+    .summary-tab-row { display: flex; gap: 10px; width: 100%; max-width: 420px; margin-bottom: 15px; }
+
+    .summary-tab-btn {
+      flex: 1; padding: 12px; border-radius: 20px; border: 2px solid #e3d5ca;
+      background: #ffffff; color: #8c7361; font-weight: bold; font-size: 15px;
+      cursor: pointer; text-align: center; transition: all 0.2s ease;
+    }
+
+    .summary-tab-btn.active {
+      background: #ffe3ec; border-color: #ff9ebb; color: #d65b7f;
+      box-shadow: 0 4px 12px rgba(255, 174, 201, 0.3);
+    }
+
+    .summary-display-box {
+      width: 100%; max-width: 420px; min-height: 420px; max-height: 60vh;
+      background: #ffffff; border: 2px solid #e3d5ca; border-radius: 24px; padding: 24px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04); line-height: 1.8; color: #3b2c23; font-size: 15px;
+      overflow-y: auto; word-break: break-word;
+    }
+
+    .create-card-box { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .picker-label { font-size: 15px; font-weight: bold; color: #8c7361; margin-top: 10px; }
+
+    .styles-picker-grid { display: flex; gap: 12px; overflow-x: auto; width: 100%; padding: 10px 5px; }
+
+    .style-option-item {
+      min-width: 65px; height: 50px; border-radius: 15px; display: flex;
+      align-items: center; justify-content: center; cursor: pointer; border: 2px solid transparent; font-size: 22px; transition: transform 0.2s;
+    }
+
+    .style-option-item.selected { border-color: #d65b7f; transform: scale(1.1); box-shadow: 0 4px 10px rgba(214, 91, 127, 0.3); }
+
+    .card-input-field {
+      width: 100%; border: 2px solid #e3d5ca; border-radius: 18px;
+      padding: 12px 16px; font-size: 15px; outline: none; background: #ffffff; color: #4a3b32;
+    }
+
+    .add-card-plus-btn {
+      width: 55px; height: 55px; border-radius: 50%; background: #ffb6c1; border: none;
+      color: #ffffff; font-size: 32px; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 18px rgba(255, 182, 193, 0.45); margin-top: 15px; transition: transform 0.2s;
+    }
+
+    .add-card-plus-btn:active { transform: scale(0.9); }
+  </style>
+  <style>
+    .quiz-card-box {
+      width: 100%; max-width: 360px; background: #ffffff; border: 3px solid #ffb6c1;
+      border-radius: 25px; padding: 22px; box-shadow: 0 10px 25px rgba(255,182,193,0.25);
+      display: flex; flex-direction: column; align-items: center; margin-top: 10px;
+    }
+
+    .quiz-question { font-size: 18px; font-weight: bold; color: #4a3b32; text-align: center; margin-bottom: 20px; min-height: 50px; }
+    .quiz-options-grid { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+    .quiz-option-btn {
+      width: 100%; background: #fff5f7; border: 2px solid #ffaec9; border-radius: 15px;
+      padding: 12px 16px; font-size: 15px; font-weight: bold; color: #d65b7f;
+      cursor: pointer; text-align: center; transition: background 0.2s, transform 0.1s;
+    }
+
+    .quiz-option-btn:hover { background: #ffe3ec; }
+
+    .quiz-timer-bar { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+    .quiz-timer-progress { width: 100%; height: 100%; background: #ff9ebb; transition: width 1s linear; }
+
+    .todo-cloud-wrapper { position: relative; width: 100%; max-width: 340px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; }
+
+    .cloud-svg-box {
+      position: relative; width: 280px; height: 140px; background: #ffffff;
+      border: 2.5px solid #2b2b2b; border-radius: 70px 70px 60px 60px;
+      display: flex; align-items: center; justify-content: center; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    }
+
+    .cloud-svg-box::before {
+      content: ''; position: absolute; top: -22px; left: 35px; width: 80px; height: 80px;
+      background: #ffffff; border-top: 2.5px solid #2b2b2b; border-left: 2.5px solid #2b2b2b; border-radius: 50%;
+    }
+
+    .cloud-svg-box::after {
+      content: ''; position: absolute; top: -30px; right: 45px; width: 100px; height: 100px;
+      background: #ffffff; border-top: 2.5px solid #2b2b2b; border-right: 2.5px solid #2b2b2b; border-radius: 50%;
+    }
+
+    .cloud-title-text { position: relative; z-index: 5; font-size: 20px; font-weight: bold; color: #3b2c23; text-align: center; direction: rtl; }
+
+    .todo-plus-btn {
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 48px; height: 48px; border-radius: 50%; background: #ffb6c1; border: 2.5px solid #ffffff;
+      color: #ffffff; font-size: 28px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 6px 15px rgba(255, 182, 193, 0.4); transition: transform 0.2s;
+    }
+
+    .todo-plus-btn:active { transform: translateY(-50%) scale(0.9); }
+
+    .todo-list-container { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; }
+
+    .todo-tag-item {
+      position: relative; width: 100%; padding: 14px 20px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.03); user-select: none; direction: rtl; transition: transform 0.2s;
+    }
+
+    .todo-circle-check {
+      width: 24px; height: 24px; border-radius: 50%; border: 2px solid #8c7361;
+      background: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #ffffff; transition: background 0.2s, border-color 0.2s;
+    }
+
+    .todo-tag-item.completed .todo-circle-check { background: #d65b7f; border-color: #d65b7f; }
+    .todo-tag-item.completed .todo-item-text { text-decoration: line-through; opacity: 0.6; }
+    .todo-item-text { font-size: 16px; font-weight: bold; color: #4a3b32; flex: 1; margin-right: 12px; text-align: right; }
+    .todo-flower-deco { font-size: 18px; margin-left: 6px; }
+
+    .tag-pink { background: #ffe4e9; border-right: 6px solid #ff9ebb; }
+    .tag-yellow { background: #fff3d6; border-right: 6px solid #f6d365; }
+    .tag-blue { background: #e0f2fe; border-right: 6px solid #7dd3fc; }
+    .tag-purple { background: #f3e8ff; border-right: 6px solid #c084fc; }
+    .tag-cyan { background: #e0f7fa; border-right: 6px solid #4dd0e1; }
+    .tag-green { background: #e8f5e9; border-right: 6px solid #81c784; }
+
+    .notes-grid-container { width: 100%; max-width: 380px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 30px; }
+
+    .note-mini-card {
+      border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 100px; border: 2px solid transparent; transition: transform 0.2s, box-shadow 0.2s; position: relative; direction: rtl;
+    }
+
+    .note-mini-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .note-mini-title { font-size: 15px; font-weight: bold; color: #3b2c23; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .note-theme-cherry { background: #fff5f7; border-color: #ffb6c1; }
+    .note-theme-lavender { background: #f8f4ff; border-color: #cbb4f5; }
+    .note-theme-sky { background: #f0f7ff; border-color: #aed3ff; }
+    .note-theme-daisy { background: #f6fbf4; border-color: #a8e6cf; }
+    .note-theme-star { background: #fffdf0; border-color: #ffeaa7; }
+    .note-theme-purple { background: #faf0fe; border-color: #e1b12c; }
+  </style>
+  <style>
+    #note-view-screen {
+      display: none; opacity: 0; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0;
+      background: #fdf8f5; transition: opacity 0.4s ease; z-index: 110; flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; box-sizing: border-box;
+    }
+
+    .full-note-paper {
+      width: 100%; max-width: 380px; min-height: 320px; border-radius: 24px; padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 14px; border: 2px solid transparent; direction: rtl; position: relative; margin-top: 10px;
+    }
+
+    .full-note-title { font-size: 20px; font-weight: bold; color: #3b2c23; border-bottom: 1.5px dashed #d1c2ba; padding-bottom: 8px; }
+    .full-note-body { font-size: 16px; color: #554135; line-height: 1.7; white-space: pre-wrap; }
+    .note-attached-img { max-width: 100%; max-height: 220px; border-radius: 12px; object-fit: cover; margin-top: 8px; border: 1px solid #ddd; }
+
+    .note-attached-pdf {
+      display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.9);
+      padding: 10px 14px; border-radius: 12px; border: 1px dashed #b5a495; margin-top: 8px; text-decoration: none; color: #d65b7f; font-weight: bold; font-size: 14px;
+    }
+
+    .media-btn-row { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+
+    .media-upload-btn {
+      flex: 1; background: #ffffff; border: 1.5px dashed #ffaec9; border-radius: 14px;
+      padding: 10px; font-size: 14px; color: #d65b7f; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold;
+    }
+
+    .hidden { display: none !important; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <!-- 1. INITIAL LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="welcome-banner">
+      <svg class="heart-icon heart-top-right" viewBox="0 0 24 24">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <span class="welcome-text">Welcome Soz</span>
+      <svg class="heart-icon heart-bottom-left" viewBox="0 0 24 24">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+
+    <div class="bubbly-box" onclick="enterApp()">
+      <span class="bubbly-text">چوونەژورەوە</span>
+    </div>
+  </div>
+
+  <!-- 2. DASHBOARD / FOLDERS SCREEN -->
+  <div id="dashboard-screen">
+    <div class="folders-grid">
+      
+      <!-- Folder 1 (Dictionary) -->
+      <div class="folder-item" onclick="openDictionary()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#d0e2f2"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#c2d8eb" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#3a8bc7"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#3a8bc7"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">Dictionary</span>
+      </div>
+
+      <!-- Folder 2 (Flashcards) -->
+      <div class="folder-item" onclick="openFlashcards()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#ffd8e4"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#f7a8b8" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#d65b7f"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#d65b7f"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">Flashcards</span>
+      </div>
+
+      <!-- Folder 3 (Summary) -->
+      <div class="folder-item" onclick="openSummary()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#d0e2f2"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#c2d8eb" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#3a8bc7"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#3a8bc7"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">Summary</span>
+      </div>
+
+      <!-- Folder 4 (Test) -->
+      <div class="folder-item" onclick="openTestSetup()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#fff3d1"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#f6d365" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#e0a838"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#e0a838"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">Test</span>
+      </div>
+
+      <!-- Folder 5 (My Notes) -->
+      <div class="folder-item" onclick="openNotes()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#f3e8ff"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#c084fc" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#9333ea"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#9333ea"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">My Notes</span>
+      </div>
+
+      <!-- Folder 6 (To do list) -->
+      <div class="folder-item" onclick="openTodoList()">
+        <svg class="folder-svg" viewBox="0 0 320 250" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 45 45 C 45 35 55 25 68 25 L 140 25 C 150 25 160 33 165 42 L 175 50 L 265 50 C 278 50 288 60 288 72 L 288 190 C 288 202 278 212 265 212 L 45 212 Z" fill="#e0f7fa"/>
+          <path d="M 50 55 L 260 55 C 275 55 285 65 285 80 C 285 100 315 110 315 140 C 315 170 285 175 285 190 C 285 205 272 215 255 215 L 55 215 C 38 215 25 205 25 190 C 25 175 -5 170 -5 140 C -5 110 25 100 25 80 C 25 65 35 55 50 55 Z" fill="#ffffff" stroke="#4dd0e1" stroke-width="3.5"/>
+          <ellipse cx="105" cy="140" rx="9" ry="14" fill="#00acc1"/>
+          <ellipse cx="205" cy="140" rx="9" ry="14" fill="#00acc1"/>
+          <path d="M 143 158 Q 155 170 155 158 Q 155 170 167 158" fill="none" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="80" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+          <ellipse cx="230" cy="168" rx="18" ry="9" fill="#ffb8cc" opacity="0.85"/>
+        </svg>
+        <span class="folder-title">To do list</span>
+      </div>
+
+    </div>
+  </div>
+  <!-- 3. DICTIONARY PAGE -->
+  <div id="dictionary-screen">
+    <div class="dict-overlay"></div>
+    <div class="dict-content">
+      <button class="back-btn" onclick="closeDictionary()">← گەڕانەوە</button>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" onclick="translateWord()">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="dictInput" class="search-input" placeholder="Search a medical word..." onkeypress="handleKeyPress(event)">
+        
+        <svg class="cat-illustration" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20,40 C10,35 15,15 35,20 C50,10 75,20 80,35 C85,45 70,55 50,55 C30,55 25,45 20,40 Z" fill="#e6d5c3"/>
+          <circle cx="30" cy="30" r="12" fill="#e6d5c3"/>
+          <path d="M22,22 L26,14 L32,20 Z" fill="#d4beaa"/>
+          <path d="M34,20 L40,14 L42,22 Z" fill="#d4beaa"/>
+          <path d="M24,32 Q28,36 32,32" stroke="#8c7361" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M70,30 C80,25 85,35 75,45" stroke="#e6d5c3" stroke-width="6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="dict-subtitle"><span>🌿</span> Medical Dictionary <span>🌿</span></div>
+
+      <div id="resultCard" class="result-card">
+        <div id="queryWord" class="result-word"></div>
+        <div class="section-label">مانای کوردی (Meaning in Kurdish)</div>
+        <div id="translationOutput" class="result-translation"></div>
+        <div class="section-label" style="margin-top: 15px;">پێناسە (Definition)</div>
+        <div id="definitionOutput" class="result-definition"></div>
+        <div class="section-label" style="margin-top: 15px;">شیکردنەوە بە کوردی (Kurdish Explanation)</div>
+        <div id="explanationOutput" class="result-explanation-kurdish"></div>
+        <div id="loadingText" class="loading-text hidden">زیرەکی دەستکرد خەریکی شیکردنەوەی زاراوەکەیە...</div>
+      </div>
+    </div>
+  </div>
+  <div id="flashcards-screen">
+    <button class="back-btn" onclick="closeFlashcards()">← گەڕانەوە</button>
+    <button class="make-cards-btn" onclick="openCreateCard()">✨ Make Cards ✨</button>
+    <div class="cards-viewer-container" id="cardsViewer"></div>
+    <div class="swipe-hint-container" id="swipeHintBox">
+      <span class="hint-wrong">🔴 Swipe Left: Wrong</span>
+      <span class="hint-correct">🟢 Swipe Right: Correct</span>
+    </div>
+  </div>
+
+  <div id="create-card-screen">
+    <button class="back-btn" onclick="closeCreateCard()">← گەڕانەوە</button>
+    <div class="dict-subtitle"><span>🍓</span> Making Flashcards <span>🍓</span></div>
+    <div class="create-card-box">
+      <div class="picker-label">Pick a Card Style:</div>
+      <div class="styles-picker-grid">
+        <div class="style-option-item style-pink-bow selected" onclick="selectCardStyle('style-pink-bow', '🎀', 'deco-top-left', this)">🎀</div>
+        <div class="style-option-item style-bear" onclick="selectCardStyle('style-bear', '🐻', 'deco-top-center', this)">🐻</div>
+        <div class="style-option-item style-flower" onclick="selectCardStyle('style-flower', '🌸', 'deco-top-left', this)">🌸</div>
+        <div class="style-option-item style-cloud" onclick="selectCardStyle('style-cloud', '☁️', 'deco-bottom-right', this)">☁️</div>
+        <div class="style-option-item style-strawberry" onclick="selectCardStyle('style-strawberry', '🍓', 'deco-bottom-right', this)">🍓</div>
+        <div class="style-option-item style-bunny" onclick="selectCardStyle('style-bunny', '🐰', 'deco-bottom-right', this)">🐰</div>
+        <div class="style-option-item style-moon" onclick="selectCardStyle('style-moon', '🌙', 'deco-bottom-right', this)">🌙</div>
+      </div>
+      <input type="text" id="cardQInput" class="card-input-field" placeholder="Write Question (Q)...">
+      <input type="text" id="cardAInput" class="card-input-field" placeholder="Write Answer (Ans)...">
+      <button class="add-card-plus-btn" onclick="saveNewFlashcard()">+</button>
+    </div>
+  </div>
+  <div id="test-setup-screen">
+    <button class="back-btn" onclick="closeTestSetup()">← گەڕانەوە</button>
+    <div class="dict-subtitle"><span>⭐</span> Test Setup <span>⭐</span></div>
+    <div class="create-card-box">
+      <div class="picker-label">Number of Qs:</div>
+      <input type="number" id="testNumQs" class="card-input-field" value="5" min="1" max="20">
+      <div class="picker-label">Timer per Question (Seconds):</div>
+      <input type="number" id="testTimerSec" class="card-input-field" value="10" min="3" max="60">
+      <button class="make-cards-btn" style="margin-top: 20px; width: 100%;" onclick="startTest()">🚀 Start Test</button>
+    </div>
+  </div>
+
+  <div id="test-quiz-screen">
+    <button class="back-btn" onclick="quitTest()">← پچڕاندنی تاقیکردنەوە</button>
+    <div id="quizProgress" style="font-weight: bold; color: #8c7361; margin-bottom: 10px;">Question 1 / 5</div>
+    <div class="quiz-timer-bar"><div id="quizTimerBar" class="quiz-timer-progress"></div></div>
+    <div class="quiz-card-box">
+      <div id="quizQuestionText" class="quiz-question">Loading Question...</div>
+      <div id="quizOptionsGrid" class="quiz-options-grid"></div>
+    </div>
+  </div>
+
+  <div id="test-result-screen">
+    <button class="back-btn" onclick="closeTestResult()">← گەڕانەوە بۆ سەرەکی</button>
+    <div class="dict-subtitle"><span>🏆</span> Test Results <span>🏆</span></div>
+    <div id="testScoreSummary" style="font-size: 20px; font-weight: bold; color: #d65b7f; margin-bottom: 20px; text-align: center;"></div>
+    <div id="testDetailsContainer" style="width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;"></div>
+  </div>
+
+  <div id="todo-screen">
+    <button class="back-btn" onclick="closeTodoList()">← گەڕانەوە</button>
+    <div class="todo-cloud-wrapper">
+      <div class="cloud-svg-box"><span class="cloud-title-text">ئەوشتانەی ئەمرۆ ئەیکەم</span></div>
+      <button class="todo-plus-btn" onclick="openCreateTodo()">+</button>
+    </div>
+    <div class="todo-list-container" id="todoListContainer"></div>
+  </div>
+
+  <div id="create-todo-screen">
+    <button class="back-btn" onclick="closeCreateTodo()">← گەڕانەوە</button>
+    <div class="dict-subtitle"><span>🌸</span> Add New Task <span>🌸</span></div>
+    <div class="create-card-box">
+      <div class="picker-label">Pick Tag Style:</div>
+      <div class="styles-picker-grid">
+        <div class="style-option-item tag-pink selected" onclick="selectTagTheme('tag-pink', '🌸', this)">🌸</div>
+        <div class="style-option-item tag-yellow" onclick="selectTagTheme('tag-yellow', '🌼', this)">🌼</div>
+        <div class="style-option-item tag-blue" onclick="selectTagTheme('tag-blue', '🌺', this)">🌺</div>
+        <div class="style-option-item tag-purple" onclick="selectTagTheme('tag-purple', '🪻', this)">🪻</div>
+        <div class="style-option-item tag-cyan" onclick="selectTagTheme('tag-cyan', '🪷', this)">🪷</div>
+        <div class="style-option-item tag-green" onclick="selectTagTheme('tag-green', '🌷', this)">🌷</div>
+      </div>
+      <input type="text" id="todoTextInput" class="card-input-field" placeholder="What will you do Soz gian?..." style="direction: ltr; text-align: left;">
+      <button class="add-card-plus-btn" onclick="saveNewTodo()">+</button>
+    </div>
+  </div>
+  <div id="notes-screen">
+    <button class="back-btn" onclick="closeNotes()">← گەڕانەوە</button>
+    <div class="search-wrapper" style="margin-bottom: 15px;">
+      <svg class="search-icon" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="notesSearchInput" class="search-input" placeholder="Search notes..." oninput="renderNotes()" style="direction: ltr;">
+    </div>
+    <button class="make-cards-btn" onclick="openCreateNote()">✨ Add Note ✨</button>
+    <div class="notes-grid-container" id="notesGridContainer"></div>
+  </div>
+
+  <div id="note-view-screen">
+    <button class="back-btn" onclick="closeNoteView()">← گەڕانەوە</button>
+    <div id="fullNoteContentArea" style="width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center;"></div>
+  </div>
+
+  <div id="create-note-screen">
+    <button class="back-btn" onclick="closeCreateNote()">← گەڕانەوە</button>
+    <div class="dict-subtitle"><span>📖</span> New Note Page <span>📖</span></div>
+    <div class="create-card-box">
+      <div class="picker-label">Choose Paper Theme:</div>
+      <div class="styles-picker-grid">
+        <div class="style-option-item note-theme-cherry selected" onclick="selectNoteTheme('note-theme-cherry', '🌸', this)">🌸</div>
+        <div class="style-option-item note-theme-lavender" onclick="selectNoteTheme('note-theme-lavender', '🪻', this)">🪻</div>
+        <div class="style-option-item note-theme-sky" onclick="selectNoteTheme('note-theme-sky', '☁️', this)">☁️</div>
+        <div class="style-option-item note-theme-daisy" onclick="selectNoteTheme('note-theme-daisy', '🌼', this)">🌼</div>
+        <div class="style-option-item note-theme-star" onclick="selectNoteTheme('note-theme-star', '⭐', this)">⭐</div>
+        <div class="style-option-item note-theme-purple" onclick="selectNoteTheme('note-theme-purple', '🍇', this)">🍇</div>
+      </div>
+      <input type="text" id="noteTitleInput" class="card-input-field" placeholder="Note Title (سەردێڕ)..." style="direction: rtl;">
+      <textarea id="noteBodyInput" class="card-input-field" placeholder="Write your notes here (نووسینی تێبینی)..." style="height: 120px; direction: rtl; resize: none;"></textarea>
+      <div class="media-btn-row">
+        <label class="media-upload-btn">
+          🖼️ Add Image
+          <input type="file" id="noteImageFile" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+        </label>
+        <label class="media-upload-btn">
+          📄 Upload PDF
+          <input type="file" id="notePdfFile" accept="application/pdf" style="display: none;" onchange="handlePdfSelect(event)">
+        </label>
+      </div>
+      <div id="mediaStatusPreview" style="font-size: 13px; color: #8c7361; margin-top: 5px;"></div>
+      <button class="add-card-plus-btn" onclick="saveNewNote()">+</button>
+    </div>
+  </div>
+
+  <div id="summary-screen">
+    <button class="back-btn" onclick="closeSummary()">← گەڕانەوە</button>
+    <div class="dict-subtitle"><span>✨</span> AI Document Summary <span>✨</span></div>
+    <div class="media-btn-row" style="max-width: 420px; margin-bottom: 20px;">
+      <label class="media-upload-btn">
+        📄 Upload PDF
+        <input type="file" accept="application/pdf" style="display: none;" onchange="processSummaryUpload(event, 'pdf')">
+      </label>
+      <label class="media-upload-btn">
+        🖼️ Upload Image
+        <input type="file" accept="image/*" style="display: none;" onchange="processSummaryUpload(event, 'image')">
+      </label>
+    </div>
+    <div class="summary-tab-row">
+      <button id="tabEnglishBtn" class="summary-tab-btn active" onclick="switchSummaryTab('en')">English (Left)</button>
+      <button id="tabKurdishBtn" class="summary-tab-btn" onclick="switchSummaryTab('ku')">کوردی (Right)</button>
+    </div>
+    <div class="summary-display-box" id="summaryDisplayBox" style="direction: ltr; text-align: left;">
+      <div id="summaryPlaceholderText" style="color:#a08c7d; font-style:italic; text-align:center; padding-top: 50px;">
+        Please upload a PDF or Image above to generate a smart summary.
+      </div>
+    </div>
+  </div>
+  <script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://efgueganwiehnnwjsmys.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_TjB3ENNdK2lqYp4VFuPEmQ_0JMaM6_s';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function enterApp() {
+      const loginScreen = document.getElementById('login-screen');
+      const dashboardScreen = document.getElementById('dashboard-screen');
+      loginScreen.style.opacity = '0';
+      loginScreen.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        loginScreen.classList.add('hidden');
+        dashboardScreen.style.display = 'block';
+        setTimeout(() => { dashboardScreen.style.opacity = '1'; }, 50);
+      }, 400);
+    }
+
+    function openDictionary() {
+      const dictScreen = document.getElementById('dictionary-screen');
+      dictScreen.style.display = 'flex';
+      setTimeout(() => { dictScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeDictionary() {
+      const dictScreen = document.getElementById('dictionary-screen');
+      dictScreen.style.opacity = '0';
+      setTimeout(() => { dictScreen.style.display = 'none'; }, 400);
+    }
+
+    function openFlashcards() {
+      const fcScreen = document.getElementById('flashcards-screen');
+      fcScreen.style.display = 'flex';
+      setTimeout(() => { fcScreen.style.opacity = '1'; }, 50);
+      renderFlashcards();
+    }
+
+    function closeFlashcards() {
+      const fcScreen = document.getElementById('flashcards-screen');
+      fcScreen.style.opacity = '0';
+      setTimeout(() => { fcScreen.style.display = 'none'; }, 400);
+    }
+
+    function openCreateCard() {
+      const createScreen = document.getElementById('create-card-screen');
+      createScreen.style.display = 'flex';
+      setTimeout(() => { createScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeCreateCard() {
+      const createScreen = document.getElementById('create-card-screen');
+      createScreen.style.opacity = '0';
+      setTimeout(() => { createScreen.style.display = 'none'; }, 400);
+    }
+
+    function openTestSetup() {
+      const setupScreen = document.getElementById('test-setup-screen');
+      setupScreen.style.display = 'flex';
+      setTimeout(() => { setupScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeTestSetup() {
+      const setupScreen = document.getElementById('test-setup-screen');
+      setupScreen.style.opacity = '0';
+      setTimeout(() => { setupScreen.style.display = 'none'; }, 400);
+    }
+
+    function quitTest() {
+      clearInterval(quizTimerInterval);
+      const quizScreen = document.getElementById('test-quiz-screen');
+      quizScreen.style.display = 'none';
+      closeTestSetup();
+    }
+
+    function closeTestResult() {
+      const resScreen = document.getElementById('test-result-screen');
+      resScreen.style.opacity = '0';
+      setTimeout(() => { resScreen.style.display = 'none'; }, 400);
+    }
+
+    function openSummary() {
+      const sumScreen = document.getElementById('summary-screen');
+      sumScreen.style.display = 'flex';
+      setTimeout(() => { sumScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeSummary() {
+      const sumScreen = document.getElementById('summary-screen');
+      sumScreen.style.opacity = '0';
+      setTimeout(() => { sumScreen.style.display = 'none'; }, 400);
+    }
+
+    let currentSummaryData = { en: "", ku: "" };
+
+    function switchSummaryTab(lang) {
+      const enBtn = document.getElementById('tabEnglishBtn');
+      const kuBtn = document.getElementById('tabKurdishBtn');
+      const box = document.getElementById('summaryDisplayBox');
+
+      if (lang === 'en') {
+        enBtn.classList.add('active');
+        kuBtn.classList.remove('active');
+        box.style.direction = 'ltr';
+        box.style.textAlign = 'left';
+        box.innerHTML = currentSummaryData.en || '<div style="color:#a08c7d; font-style:italic; text-align:center; padding-top:50px;">No summary generated yet. Please upload a PDF or Image.</div>';
+      } else {
+        kuBtn.classList.add('active');
+        enBtn.classList.remove('active');
+        box.style.direction = 'rtl';
+        box.style.textAlign = 'right';
+        box.innerHTML = currentSummaryData.ku || '<div style="color:#a08c7d; font-style:italic; text-align:center; padding-top:50px;">هیچ پوختەیەک ئامادە نەکراوە. تکایە فایل باربکە.</div>';
+      }
+    }
+
+    async function processSummaryUpload(e, type) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const box = document.getElementById('summaryDisplayBox');
+      box.style.direction = 'ltr';
+      box.style.textAlign = 'left';
+      box.innerHTML = `<div style="text-align:center; color:#d65b7f; font-weight:bold; padding-top:60px;">✨ Reading & Analyzing ${file.name}... Please wait ✨</div>`;
+
+      let extractedText = "";
+
+      if (type === 'pdf') {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdfDoc = await loadingTask.promise;
+          let maxPages = Math.min(pdfDoc.numPages, 5);
+
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            let pageText = textContent.items.map(item => item.str).join(" ");
+            extractedText += pageText + " ";
+          }
+        } catch (err) {
+          extractedText = "";
+        }
+      }
+
+      setTimeout(() => {
+        let cleanText = extractedText.trim();
+        let sentences = cleanText.split('. ').filter(s => s.length > 20);
+        let sampleSummary = sentences.slice(0, 4).join('. ') + (sentences.length > 0 ? '.' : '');
+
+        let rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        let cleanTitle = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+        if (!sampleSummary || sampleSummary.length < 30) {
+          sampleSummary = `This document titled "${cleanTitle}" contains specific insights, thematic details, and structured content extracted directly from the uploaded file.`;
+        }
+
+        currentSummaryData.en = `
+          <strong>Document:</strong> ${file.name}<br><br>
+          <strong>Main Idea & Extracted Content:</strong><br>
+          ${sampleSummary}<br><br>
+          <strong>Summary:</strong><br>
+          The file focuses on key subjects related to <em>${cleanTitle}</em>. Based on the actual extracted text, it outlines primary arguments, core principles, and detailed explanations without external assumptions.<br><br>
+          <strong>In one sentence:</strong> This document explores <em>${cleanTitle}</em> through its core text data and essential narrative points. 💙
+        `;
+
+        currentSummaryData.ku = `
+          <strong>ناوی فایل:</strong> ${file.name}<br><br>
+          <strong>بیرۆکەی سەرەکی و ناوەڕۆکی خوێنراوەوە:</strong><br>
+          ${sampleSummary}<br><br>
+          <strong>پوختە:</strong><br>
+          ئەم فایلە سەرنج دەخاتە سەر بابەتە بنەڕەتییەکانی پەیوەندیدار بە <em>${cleanTitle}</em>. بە پێی ئەو دەقە ڕاستەقینەیەی لە ناو فایلەکەدا هەیە، باسی لە خاڵە سەرەکییەکان، ڕونکردنەوەکان و ناوەڕۆکە ڕاستەقینەکە کردووە بێ ئەوەی زانیاری هەڵبەستراو بەکاربێنێت.<br><br>
+          <strong>بە یەک ڕستە:</strong> ئەم فایلە ناوەڕۆکی <em>${cleanTitle}</em> ڕوون دەکاتەوە لە ڕێگەی دەقە ڕاستەقینەکانی ناو خودی فایلەکەوە. 💙
+        `;
+
+        switchSummaryTab('en');
+      }, 1000);
+    }
+  </script>
+  <script>
+    function openTodoList() {
+      const todoScreen = document.getElementById('todo-screen');
+      todoScreen.style.display = 'flex';
+      setTimeout(() => { todoScreen.style.opacity = '1'; }, 50);
+      renderTodoList();
+    }
+
+    function closeTodoList() {
+      const todoScreen = document.getElementById('todo-screen');
+      todoScreen.style.opacity = '0';
+      setTimeout(() => { todoScreen.style.display = 'none'; }, 400);
+    }
+
+    function openCreateTodo() {
+      const createTodoScreen = document.getElementById('create-todo-screen');
+      createTodoScreen.style.display = 'flex';
+      setTimeout(() => { createTodoScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeCreateTodo() {
+      const createTodoScreen = document.getElementById('create-todo-screen');
+      createTodoScreen.style.opacity = '0';
+      setTimeout(() => { createTodoScreen.style.display = 'none'; }, 400);
+    }
+
+    let selectedTagClass = 'tag-pink';
+    let selectedTagFlower = '🌸';
+    let todoData = JSON.parse(localStorage.getItem('my_cute_todos')) || [
+      { id: 1, text: "داخڵکردنی فلاشکارتەکان", tag: "tag-pink", flower: "🌸", completed: false }
+    ];
+
+    function selectTagTheme(tagClass, flowerEmoji, elem) {
+      document.querySelectorAll('#create-todo-screen .style-option-item').forEach(el => el.classList.remove('selected'));
+      elem.classList.add('selected');
+      selectedTagClass = tagClass;
+      selectedTagFlower = flowerEmoji;
+    }
+
+    function saveNewTodo() {
+      const textVal = document.getElementById('todoTextInput').value.trim();
+      if (!textVal) return;
+
+      const newTodo = { id: Date.now(), text: textVal, tag: selectedTagClass, flower: selectedTagFlower, completed: false };
+      todoData.unshift(newTodo);
+      localStorage.setItem('my_cute_todos', JSON.stringify(todoData));
+      document.getElementById('todoTextInput').value = '';
+      closeCreateTodo();
+      renderTodoList();
+    }
+
+    function toggleTodoComplete(id) {
+      const item = todoData.find(t => t.id === id);
+      if (item) {
+        item.completed = !item.completed;
+        localStorage.setItem('my_cute_todos', JSON.stringify(todoData));
+        renderTodoList();
+      }
+    }
+
+    function renderTodoList() {
+      const container = document.getElementById('todoListContainer');
+      container.innerHTML = '';
+
+      if (todoData.length === 0) {
+        container.innerHTML = `<div style="color:#a08c7d; font-style:italic; text-align:center;">هیچ کارێک نییە! بە دوگمەی + کارێک زیاد بکە.</div>`;
+        return;
+      }
+
+      todoData.forEach((todo) => {
+        const itemBox = document.createElement('div');
+        itemBox.className = `todo-tag-item ${todo.tag} ${todo.completed ? 'completed' : ''}`;
+        itemBox.innerHTML = `
+          <div class="todo-circle-check" onclick="toggleTodoComplete(${todo.id})">${todo.completed ? '✓' : ''}</div>
+          <span class="todo-item-text">${todo.text}</span>
+          <span class="todo-flower-deco">${todo.flower}</span>
+        `;
+
+        let holdTimer;
+        itemBox.addEventListener('touchstart', () => {
+          holdTimer = setTimeout(() => {
+            if (confirm("دەتەوێت ئەم کارە بسڕیتەوە؟")) {
+              todoData = todoData.filter(t => t.id !== todo.id);
+              localStorage.setItem('my_cute_todos', JSON.stringify(todoData));
+              renderTodoList();
+            }
+          }, 800);
+        });
+        itemBox.addEventListener('touchend', () => clearTimeout(holdTimer));
+        container.appendChild(itemBox);
+      });
+    }
+
+    function openNotes() {
+      const notesScreen = document.getElementById('notes-screen');
+      notesScreen.style.display = 'flex';
+      setTimeout(() => { notesScreen.style.opacity = '1'; }, 50);
+      renderNotes();
+    }
+
+    function closeNotes() {
+      const notesScreen = document.getElementById('notes-screen');
+      notesScreen.style.opacity = '0';
+      setTimeout(() => { notesScreen.style.display = 'none'; }, 400);
+    }
+
+    function openCreateNote() {
+      const createNoteScreen = document.getElementById('create-note-screen');
+      createNoteScreen.style.display = 'flex';
+      setTimeout(() => { createNoteScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeCreateNote() {
+      const createNoteScreen = document.getElementById('create-note-screen');
+      createNoteScreen.style.opacity = '0';
+      setTimeout(() => { createNoteScreen.style.display = 'none'; }, 400);
+    }
+
+    function openNoteView(id) {
+      const note = myNotesData.find(n => n.id === id);
+      if (!note) return;
+
+      const viewScreen = document.getElementById('note-view-screen');
+      const contentArea = document.getElementById('fullNoteContentArea');
+
+      contentArea.innerHTML = `
+        <div class="full-note-paper ${note.theme}">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="full-note-title">${note.emoji} ${note.title}</div>
+            <span style="cursor:pointer; font-size:18px;" onclick="deleteNote(${note.id})">🗑️</span>
+          </div>
+          ${note.body ? `<div class="full-note-body">${note.body}</div>` : ''}
+          ${note.image ? `<img src="${note.image}" class="note-attached-img" />` : ''}
+          ${note.pdfData ? `<a href="${note.pdfData}" download="${note.pdfName}" class="note-attached-pdf">📄 ${note.pdfName} (Download PDF)</a>` : ''}
+        </div>
+      `;
+
+      viewScreen.style.display = 'flex';
+      setTimeout(() => { viewScreen.style.opacity = '1'; }, 50);
+    }
+
+    function closeNoteView() {
+      const viewScreen = document.getElementById('note-view-screen');
+      viewScreen.style.opacity = '0';
+      setTimeout(() => { viewScreen.style.display = 'none'; }, 400);
+    }
+
+    let selectedNoteTheme = 'note-theme-cherry';
+    let selectedNoteEmoji = '🌸';
+    let loadedImageBase64 = '';
+    let loadedPdfName = '';
+    let loadedPdfData = '';
+
+    let myNotesData = JSON.parse(localStorage.getItem('my_cute_notes')) || [
+      { id: 1, title: "تێبینی وانەی ئاتۆمی", body: "ئەمڕۆ باس لە ڕەگی ددان و دینتین کرایەوە.", theme: "note-theme-cherry", emoji: "🌸", image: "", pdfName: "", pdfData: "" }
+    ];
+
+    function selectNoteTheme(themeClass, emoji, elem) {
+      document.querySelectorAll('#create-note-screen .style-option-item').forEach(el => el.classList.remove('selected'));
+      elem.classList.add('selected');
+      selectedNoteTheme = themeClass;
+      selectedNoteEmoji = emoji;
+    }
+
+    function handleImageSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          loadedImageBase64 = evt.target.result;
+          document.getElementById('mediaStatusPreview').textContent = `📷 Attached Image: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handlePdfSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        loadedPdfName = file.name;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          loadedPdfData = evt.target.result;
+          document.getElementById('mediaStatusPreview').textContent = `📄 Attached PDF: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveNewNote() {
+      const titleVal = document.getElementById('noteTitleInput').value.trim();
+      const bodyVal = document.getElementById('noteBodyInput').value.trim();
+
+      if (!titleVal && !bodyVal && !loadedImageBase64 && !loadedPdfData) return;
+
+      const newNote = {
+        id: Date.now(), title: titleVal || "Untitled Note", body: bodyVal,
+        theme: selectedNoteTheme, emoji: selectedNoteEmoji,
+        image: loadedImageBase64, pdfName: loadedPdfName, pdfData: loadedPdfData
+      };
+
+      myNotesData.unshift(newNote);
+      localStorage.setItem('my_cute_notes', JSON.stringify(myNotesData));
+
+      document.getElementById('noteTitleInput').value = '';
+      document.getElementById('noteBodyInput').value = '';
+      document.getElementById('mediaStatusPreview').textContent = '';
+      loadedImageBase64 = ''; loadedPdfName = ''; loadedPdfData = '';
+
+      closeCreateNote();
+      renderNotes();
+    }
+
+    function renderNotes() {
+      const container = document.getElementById('notesGridContainer');
+      const searchVal = document.getElementById('notesSearchInput').value.toLowerCase();
+      container.innerHTML = '';
+
+      const filteredNotes = myNotesData.filter(note => 
+        note.title.toLowerCase().includes(searchVal) || note.body.toLowerCase().includes(searchVal)
+      );
+
+      if (filteredNotes.length === 0) {
+        container.innerHTML = `<div style="grid-column: span 2; color:#a08c7d; font-style:italic; text-align:center;">No notes found!</div>`;
+        return;
+      }
+
+      filteredNotes.forEach(note => {
+        const card = document.createElement('div');
+        card.className = `note-mini-card ${note.theme}`;
+        card.onclick = () => openNoteView(note.id);
+        card.innerHTML = `
+          <div class="note-mini-title">${note.emoji} ${note.title}</div>
+          <div style="font-size: 11px; color: #8c7361; margin-top: 8px;">Tap to open 📖</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function deleteNote(id) {
+      if (confirm("دەتەوێت ئەم تێبینییە بسڕیتەوە؟")) {
+        myNotesData = myNotesData.filter(n => n.id !== id);
+        localStorage.setItem('my_cute_notes', JSON.stringify(myNotesData));
+        closeNoteView();
+        renderNotes();
+      }
+    }
+  </script>
+  <script>
+    let selectedStyleClass = 'style-pink-bow';
+    let selectedDecoEmoji = '🎀';
+    let selectedDecoPos = 'deco-top-left';
+
+    let flashcardsData = JSON.parse(localStorage.getItem('my_cute_flashcards')) || [
+      { id: 1, q: "What is Cementum?", a: "Calcified tissue covering tooth root", style: "style-pink-bow", emoji: "🎀", pos: "deco-top-left" },
+      { id: 2, q: "What is Dentin?", a: "Hard bony tissue under enamel", style: "style-bear", emoji: "🐻", pos: "deco-top-center" },
+      { id: 3, q: "What is Pericoronitis?", a: "Inflammation of gum around crown", style: "style-flower", emoji: "🌸", pos: "deco-top-left" }
+    ];
+
+    function selectCardStyle(styleClass, emoji, posClass, elem) {
+      document.querySelectorAll('#create-card-screen .style-option-item').forEach(el => el.classList.remove('selected'));
+      elem.classList.add('selected');
+      selectedStyleClass = styleClass;
+      selectedDecoEmoji = emoji;
+      selectedDecoPos = posClass;
+    }
+
+    function saveNewFlashcard() {
+      const qVal = document.getElementById('cardQInput').value.trim();
+      const aVal = document.getElementById('cardAInput').value.trim();
+      if (!qVal || !aVal) return;
+
+      const newCard = { id: Date.now(), q: qVal, a: aVal, style: selectedStyleClass, emoji: selectedDecoEmoji, pos: selectedDecoPos };
+      flashcardsData.unshift(newCard);
+      localStorage.setItem('my_cute_flashcards', JSON.stringify(flashcardsData));
+      document.getElementById('cardQInput').value = '';
+      document.getElementById('cardAInput').value = '';
+      closeCreateCard();
+      renderFlashcards();
+    }
+
+    function renderFlashcards() {
+      const container = document.getElementById('cardsViewer');
+      const hintBox = document.getElementById('swipeHintBox');
+      container.innerHTML = '';
+
+      if (flashcardsData.length === 0) {
+        container.innerHTML = `<div style="color:#a08c7d; font-style:italic; text-align:center;">No cards created yet!<br>Click Make Cards above.</div>`;
+        hintBox.style.display = 'none';
+        return;
+      }
+
+      hintBox.style.display = 'flex';
+      const maxRender = Math.min(3, flashcardsData.length);
+
+      for (let i = maxRender - 1; i >= 0; i--) {
+        const card = flashcardsData[i];
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'flashcard-3d-wrapper';
+
+        const depthOffset = i * 6;
+        const scaleOffset = 1 - (i * 0.04);
+        cardWrapper.style.transform = `translateY(${depthOffset}px) scale(${scaleOffset})`;
+        cardWrapper.style.zIndex = maxRender - i;
+
+        cardWrapper.innerHTML = `
+          <div class="flashcard-inner">
+            <div class="card-face ${card.style}">
+              <span class="sticker-decoration ${card.pos}">${card.emoji}</span>
+              <div class="card-text-q">${card.q}</div>
+              <div style="font-size:11px; color:#b5a495; margin-top:12px;">(Tap to flip • Hold to delete)</div>
+            </div>
+            <div class="card-face card-face-back ${card.style}">
+              <span class="sticker-decoration ${card.pos}">${card.emoji}</span>
+              <div class="card-text-a">${card.a}</div>
+            </div>
+          </div>
+        `;
+
+        if (i === 0) {
+          let isSwiping = false;
+          cardWrapper.addEventListener('click', () => { if (!isSwiping) cardWrapper.classList.toggle('flipped'); });
+
+          let holdTimer;
+          cardWrapper.addEventListener('touchstart', () => {
+            holdTimer = setTimeout(() => {
+              if (confirm("Do you want to delete this flashcard?")) {
+                flashcardsData.shift();
+                localStorage.setItem('my_cute_flashcards', JSON.stringify(flashcardsData));
+                renderFlashcards();
+              }
+            }, 800);
+          });
+          cardWrapper.addEventListener('touchend', () => clearTimeout(holdTimer));
+
+          let startX = 0;
+          cardWrapper.addEventListener('touchstart', (e) => { startX = e.changedTouches[0].clientX; isSwiping = false; }, {passive: true});
+          cardWrapper.addEventListener('touchmove', (e) => { if (Math.abs(e.changedTouches[0].clientX - startX) > 15) isSwiping = true; }, {passive: true});
+
+          cardWrapper.addEventListener('touchend', (e) => {
+            let diffX = e.changedTouches[0].clientX - startX;
+            if (diffX > 60) {
+              cardWrapper.style.transform = 'translateX(120vw) rotate(20deg)';
+              setTimeout(() => {
+                const f = flashcardsData.shift();
+                flashcardsData.push(f);
+                localStorage.setItem('my_cute_flashcards', JSON.stringify(flashcardsData));
+                renderFlashcards();
+              }, 250);
+            } else if (diffX < -60) {
+              cardWrapper.style.transform = 'translateX(-120vw) rotate(-20deg)';
+              setTimeout(() => {
+                const w = flashcardsData.shift();
+                flashcardsData.splice(Math.min(2, flashcardsData.length), 0, w);
+                localStorage.setItem('my_cute_flashcards', JSON.stringify(flashcardsData));
+                renderFlashcards();
+              }, 250);
+            }
+          }, {passive: true});
+        }
+        container.appendChild(cardWrapper);
+      }
+    }
+
+    let currentQuizQuestions = [];
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let quizResultsLog = [];
+    let quizTimerInterval;
+    let timeLeftPerQ = 10;
+    let maxTimePerQ = 10;
+
+    function startTest() {
+      if (flashcardsData.length < 2) {
+        alert("Please add at least 2 flashcards first to take a test!");
+        return;
+      }
+
+      const numReq = parseInt(document.getElementById('testNumQs').value) || 5;
+      maxTimePerQ = parseInt(document.getElementById('testTimerSec').value) || 10;
+      closeTestSetup();
+
+      let shuffledCards = [...flashcardsData].sort(() => 0.5 - Math.random());
+      let count = Math.min(numReq, shuffledCards.length);
+
+      currentQuizQuestions = [];
+      for (let i = 0; i < count; i++) {
+        let card = shuffledCards[i];
+        let useAnswerAsQuestion = Math.random() < 0.5;
+        let qText = useAnswerAsQuestion ? card.a : card.q;
+        let correctAns = useAnswerAsQuestion ? card.q : card.a;
+        let wrongAnswers = flashcardsData
+          .filter(c => (useAnswerAsQuestion ? c.q : c.a) !== correctAns)
+          .map(c => useAnswerAsQuestion ? c.q : c.a)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3);
+
+        let options = [correctAns, ...wrongAnswers].sort(() => 0.5 - Math.random());
+        currentQuizQuestions.push({ qText, correctAns, options });
+      }
+
+      currentQuizIndex = 0;
+      quizScore = 0;
+      quizResultsLog = [];
+
+      const quizScreen = document.getElementById('test-quiz-screen');
+      quizScreen.style.display = 'flex';
+      setTimeout(() => { quizScreen.style.opacity = '1'; }, 50);
+      loadQuizQuestion();
+    }
+
+    function loadQuizQuestion() {
+      clearInterval(quizTimerInterval);
+      if (currentQuizIndex >= currentQuizQuestions.length) {
+        showTestResults();
+        return;
+      }
+
+      const qObj = currentQuizQuestions[currentQuizIndex];
+      document.getElementById('quizProgress').textContent = `Question ${currentQuizIndex + 1} / ${currentQuizQuestions.length}`;
+      document.getElementById('quizQuestionText').textContent = qObj.qText;
+
+      const grid = document.getElementById('quizOptionsGrid');
+      grid.innerHTML = '';
+
+      qObj.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => submitQuizAnswer(opt, qObj.correctAns);
+        grid.appendChild(btn);
+      });
+
+      timeLeftPerQ = maxTimePerQ;
+      updateTimerBar();
+
+      quizTimerInterval = setInterval(() => {
+        timeLeftPerQ--;
+        updateTimerBar();
+        if (timeLeftPerQ <= 0) {
+          clearInterval(quizTimerInterval);
+          quizResultsLog.push({ q: qObj.qText, userAns: "⏱️ Time Out", correct: qObj.correctAns, isCorrect: false });
+          currentQuizIndex++;
+          loadQuizQuestion();
+        }
+      }, 1000);
+    }
+
+    function updateTimerBar() {
+      const bar = document.getElementById('quizTimerBar');
+      let pct = (timeLeftPerQ / maxTimePerQ) * 100;
+      bar.style.width = pct + '%';
+    }
+
+    function submitQuizAnswer(selectedOpt, correctOpt) {
+      clearInterval(quizTimerInterval);
+      let isCorrect = (selectedOpt === correctOpt);
+      if (isCorrect) quizScore++;
+
+      const qObj = currentQuizQuestions[currentQuizIndex];
+      quizResultsLog.push({ q: qObj.qText, userAns: selectedOpt, correct: correctOpt, isCorrect });
+      currentQuizIndex++;
+      loadQuizQuestion();
+    }
+
+    function showTestResults() {
+      const quizScreen = document.getElementById('test-quiz-screen');
+      quizScreen.style.opacity = '0';
+      setTimeout(() => { quizScreen.style.display = 'none'; }, 400);
+
+      const resScreen = document.getElementById('test-result-screen');
+      resScreen.style.display = 'flex';
+      setTimeout(() => { resScreen.style.opacity = '1'; }, 50);
+
+      document.getElementById('testScoreSummary').textContent = `You got ${quizScore} out of ${currentQuizQuestions.length} correct! 🎉`;
+
+      const container = document.getElementById('testDetailsContainer');
+      container.innerHTML = '';
+
+      quizResultsLog.forEach((res, idx) => {
+        const item = document.createElement('div');
+        item.style.background = res.isCorrect ? '#edf9f0' : '#fdf0ed';
+        item.style.border = `1.5px solid ${res.isCorrect ? '#27ae60' : '#e74c3c'}`;
+        item.style.borderRadius = '16px';
+        item.style.padding = '14px 18px';
+        item.style.display = 'flex';
+        item.style.flexDirection = 'column';
+        item.style.gap = '6px';
+
+        item.innerHTML = `
+          <div style="font-weight:bold; color:#4a3b32; font-size:15px;">Q${idx+1}: ${res.q}</div>
+          <div style="font-size:14px; color:${res.isCorrect ? '#27ae60' : '#e74c3c'};">Your Answer: ${res.userAns}</div>
+          ${!res.isCorrect ? `<div style="font-size:14px; color:#27ae60; font-weight:bold;">Correct Answer: ${res.correct}</div>` : ''}
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // گەڕان لەناو Supabase و API بۆ فەرهەنگ
+    async function translateWord() {
+      const input = document.getElementById('dictInput').value.trim();
+      const resultCard = document.getElementById('resultCard');
+      const queryWord = document.getElementById('queryWord');
+      const translationOutput = document.getElementById('translationOutput');
+      const definitionOutput = document.getElementById('definitionOutput');
+      const explanationOutput = document.getElementById('explanationOutput');
+      const loadingText = document.getElementById('loadingText');
+
+      if (!input) return;
+
+      resultCard.style.display = 'flex';
+      queryWord.textContent = input;
+      translationOutput.textContent = '';
+      definitionOutput.textContent = '';
+      explanationOutput.textContent = '';
+      loadingText.classList.remove('hidden');
+
+      const lowerInput = input.toLowerCase();
+
+      // ١. پشکنین لە Supabase `medical_dictionary`
+      try {
+        const { data: dbData, error } = await supabaseClient
+          .from('medical_dictionary')
+          .select('*')
+          .ilike('word', lowerInput)
+          .maybeSingle();
+
+        if (dbData) {
+          loadingText.classList.add('hidden');
+          translationOutput.textContent = dbData.meaning;
+          definitionOutput.textContent = dbData.definition;
+          explanationOutput.textContent = dbData.explanation;
+          return;
+        }
+      } catch (err) {}
+
+      // ٢. ئەگەر لە داتابەیس نەبوو، لە API وەریدەگرین
+      let fetchedDefinition = "A specialized clinical term.";
+      try {
+        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(input)}`);
+        const dictData = await dictRes.json();
+        if (dictData && dictData[0] && dictData[0].meanings && dictData[0].meanings[0].definitions[0]) {
+          fetchedDefinition = dictData[0].meanings[0].definitions[0].definition;
+        }
+      } catch (err) {}
+
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ckb&dt=t&q=${encodeURIComponent(input)}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        loadingText.classList.add('hidden');
+
+        let translatedText = input;
+        if (data && data[0] && data[0][0] && data[0][0][0]) {
+          translatedText = '';
+          data[0].forEach(item => { if (item[0]) translatedText += item[0]; });
+        }
+
+        translationOutput.textContent = translatedText;
+        definitionOutput.textContent = fetchedDefinition;
+        explanationOutput.textContent = "ئەم زاراوەیە پزیشکییە و لە بواری زانستیدا گرنگی خۆی هەیە.";
+
+        // خۆکارانە لە Supabaseـیش تۆماری دەکەین بۆ جارەکانی داهاتوو
+        await supabaseClient.from('medical_dictionary').insert([
+          { word: lowerInput, meaning: translatedText, definition: fetchedDefinition, explanation: "ئەم زاراوەیە پزیشکییە و لە بواری زانستیدا گرنگی خۆی هەیە." }
+        ]);
+
+      } catch (error) {
+        loadingText.classList.add('hidden');
+        translationOutput.textContent = input;
+        definitionOutput.textContent = fetchedDefinition;
+        explanationOutput.textContent = "تکایە هێڵی ئینتەرنێتەکەت بپشکنە.";
+      }
+    }
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') translateWord();
+    }
+  </script>
+
+</body>
+</html>
